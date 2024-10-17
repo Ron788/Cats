@@ -1,8 +1,12 @@
-package ru.vsu.cs.ustinov.cats;
+package ru.vsu.cs.ustinov.cats.jwt;
 
 import java.security.SecureRandom;
 import java.util.Base64;
 
+
+/**
+ * Класс, который я использовал для генерации ключа в {@link ru.vsu.cs.ustinov.cats.jwt.JwtUtil}.
+ */
 public class KeyGenerator {
 
     public static String generateSecretKey() {
