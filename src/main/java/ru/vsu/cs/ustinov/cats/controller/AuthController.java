@@ -8,6 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.vsu.cs.ustinov.cats.dto.auth.AuthRequest;
 import ru.vsu.cs.ustinov.cats.dto.auth.AuthResponse;
@@ -15,8 +16,9 @@ import ru.vsu.cs.ustinov.cats.dto.registration.RegistrationRequest;
 import ru.vsu.cs.ustinov.cats.service.UserService;
 import ru.vsu.cs.ustinov.cats.jwt.JwtUtil;
 
-@RestController
 @AllArgsConstructor
+@RestController
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private AuthenticationManager authenticationManager;
@@ -37,7 +39,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody AuthRequest authRequest) throws Exception {
+    public ResponseEntity<?> loginUser(@RequestBody AuthRequest authRequest) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())

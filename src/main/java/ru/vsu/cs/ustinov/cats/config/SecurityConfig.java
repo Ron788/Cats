@@ -1,6 +1,9 @@
 package ru.vsu.cs.ustinov.cats.config;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,12 +26,15 @@ public class SecurityConfig {
 
     private JwtRequestFilter jwtRequestFilter;
 
+    @Getter
+    private static String[] openURIs = {"/api/auth/login", "/api/auth/register"};
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register").permitAll() // Разрешаем доступ к этим эндпоинтам
+                        .requestMatchers(openURIs).permitAll() // Разрешаем доступ к этим эндпоинтам
                         .anyRequest().authenticated() // Все остальные запросы должны быть авторизованы
                 )
                 .sessionManagement(session -> session

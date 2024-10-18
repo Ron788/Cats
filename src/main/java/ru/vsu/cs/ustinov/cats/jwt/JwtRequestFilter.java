@@ -5,8 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,8 +18,8 @@ import java.io.IOException;
 
 /**
  * Непосредственно фильтр, который проверяет авторизацию
+ * Для авторизации в заголовке запроса должно быть "Authorization: Bearer <token>"
  */
-// TODO: разобраться как это работает
 @Component
 @AllArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -35,29 +34,41 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String requestUri = request.getRequestURI();
+
+        if (requestUri.contains("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         // Получаем заголовок
         final String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            handleException(response, "Token undefined", HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
+        if (SecurityContextHolder.getContext().getAuthentication() != null){
+            handleException(response, "Invalid auth", HttpServletResponse.SC_UNAUTHORIZED);
+        }
         // Вытаскиваем токен запроса
         String jwt = authorizationHeader.substring(7);
-        String username = jwtUtil.extractUsername(jwt);
 
-        if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            filterChain.doFilter(request, response);
+        String username;
+        try {
+            username = jwtUtil.extractUsername(jwt);
+        } catch (Exception e){
+            handleException(response, "Invalid token", HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+
 
         // Получаем из БД информацию о пользователе
         UserDetails userDetails = userService.loadUserByUsername(username);
 
         if (!jwtUtil.validateToken(jwt, userDetails)){
-            filterChain.doFilter(request, response);
+            handleException(response, "Token expired", HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
@@ -68,6 +79,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         filterChain.doFilter(request, response);
+    }
+
+    private void handleException(HttpServletResponse response, String message, int statusCode) throws IOException {
+        response.setStatus(statusCode);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }
 
