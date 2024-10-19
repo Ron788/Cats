@@ -24,10 +24,19 @@ public class JwtUtil {
      * @return Непосредственно токен
      */
     public String generateAccessToken(UserDetails userDetails) {
+        return generateAccessToken(userDetails.getUsername());
+    }
+
+    /**
+     * Генерируем access токен
+     * @param username юзернейм пользователя
+     * @return Непосредственно токен
+     */
+    public String generateAccessToken(String username) {
         int KEY_DURATION = 1000 * 60 * 60; // 1 час
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + KEY_DURATION))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -56,8 +65,20 @@ public class JwtUtil {
      * @return Булево значение валиден ли токен
      */
     public boolean validateToken(String token, UserDetails userDetails) {
-        String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return validateToken(token, userDetails.getUsername());
+    }
+
+    /**
+     * Проверяем валидность токена на соответствие пользователю
+     * @param token Jwt токен
+     * @param username юзернейм пользователя
+     * @return Булево значение валиден ли токен
+     */
+    public boolean validateToken(String token, String username) {
+        if (!extractUsername(token).equals(username)) {
+            return false;
+        }
+        return !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
