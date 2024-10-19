@@ -4,9 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -66,14 +64,15 @@ public class AuthController {
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userOptional.get());
 
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken.getToken());
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 1 неделя
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+                .httpOnly(true)
+                .path("/")
+                .maxAge(60 * 60 * 24 * 7)  // Например, неделя
+                .build();
 
-        response.addCookie(refreshTokenCookie);
-
-        return ResponseEntity.ok(new AuthResponse(accessToken));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new AuthResponse(accessToken));
     }
 
     @PostMapping("/refresh-token")
