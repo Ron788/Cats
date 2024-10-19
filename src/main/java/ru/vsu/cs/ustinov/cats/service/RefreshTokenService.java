@@ -20,8 +20,8 @@ public class RefreshTokenService {
     public RefreshToken createRefreshToken(User user) {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
-        refreshToken.setToken(generateToken()); // Метод для генерации токена
-        refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7)); // Пример: токен действует 7 дней
+        refreshToken.setToken(generateToken());
+        refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
         refreshToken.setCreatedAt(LocalDateTime.now());
 
         return refreshTokenRepository.save(refreshToken);

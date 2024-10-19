@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,9 +31,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     // TODO: разораться почему подчеркивает идея
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-
         String requestUri = request.getRequestURI();
 
         if (requestUri.contains("/api/auth/")) {
@@ -44,12 +44,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            handleException(response, "Token undefined", HttpServletResponse.SC_UNAUTHORIZED);
+            handleException(response, "Token undefined");
             return;
         }
 
         if (SecurityContextHolder.getContext().getAuthentication() != null){
-            handleException(response, "Invalid auth", HttpServletResponse.SC_UNAUTHORIZED);
+            handleException(response, "Invalid auth");
         }
         // Вытаскиваем токен запроса
         String jwt = authorizationHeader.substring(7);
@@ -58,7 +58,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try {
             username = jwtUtil.extractUsername(jwt);
         } catch (Exception e){
-            handleException(response, "Invalid token", HttpServletResponse.SC_UNAUTHORIZED);
+            handleException(response, "Invalid token");
             return;
         }
 
@@ -67,7 +67,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         UserDetails userDetails = userService.loadUserByUsername(username);
 
         if (!jwtUtil.validateToken(jwt, userDetails)){
-            handleException(response, "Token expired", HttpServletResponse.SC_UNAUTHORIZED);
+            handleException(response, "Token expired");
             return;
         }
 
@@ -80,8 +80,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void handleException(HttpServletResponse response, String message, int statusCode) throws IOException {
-        response.setStatus(statusCode);
+    private void handleException(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.getWriter().write("{\"error\": \"" + message + "\"}");
     }

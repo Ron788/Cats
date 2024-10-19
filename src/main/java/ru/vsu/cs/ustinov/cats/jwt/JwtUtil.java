@@ -2,9 +2,11 @@ package ru.vsu.cs.ustinov.cats.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 
 /**
@@ -14,6 +16,7 @@ import java.util.Date;
 public class JwtUtil {
 
     private final String SECRET_KEY = "tStmllQxADE+/MuCqiXk6wExMSPNcliv2CZyoVukR+8=";
+    private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
     /**
      * Генерируем access токен
@@ -26,9 +29,8 @@ public class JwtUtil {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + KEY_DURATION)) // 1 час
-                // TODO: разобраться почему подчеркивает идея строку
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + KEY_DURATION))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -39,9 +41,9 @@ public class JwtUtil {
      * @return Юзернейм пользователя
      */
     public String extractUsername(String token) {
-        // TODO: разобраться почему подчеркивает идея строки
-        return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
@@ -59,9 +61,9 @@ public class JwtUtil {
     }
 
     private boolean isTokenExpired(String token) {
-        // TODO: разобраться почему подчеркивает идея строки
-        Date expiration = Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+        Date expiration = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();

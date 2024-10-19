@@ -12,8 +12,6 @@ import ru.vsu.cs.ustinov.cats.service.UserService;
 @Configuration
 @AllArgsConstructor
 public class AuthenticationManagerConfig {
-    // TODO: магия ли это? Возможно!
-
     private UserService userService;
 
     @Bean
