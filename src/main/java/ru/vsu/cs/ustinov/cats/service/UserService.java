@@ -11,6 +11,7 @@ import ru.vsu.cs.ustinov.cats.model.User;
 import ru.vsu.cs.ustinov.cats.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -29,6 +30,10 @@ public class UserService implements UserDetailsService {
                 user.getPassword(),
                 List.of(new SimpleGrantedAuthority(user.getRole()))
         );
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     public void registerNewUser(String username, String password) {

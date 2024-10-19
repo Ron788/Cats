@@ -2,7 +2,6 @@ package ru.vsu.cs.ustinov.cats.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -17,11 +16,11 @@ public class JwtUtil {
     private final String SECRET_KEY = "tStmllQxADE+/MuCqiXk6wExMSPNcliv2CZyoVukR+8=";
 
     /**
-     * Генерируем токен
+     * Генерируем access токен
      * @param userDetails информация о пользователе, будет зашита в ключ
      * @return Непосредственно токен
      */
-    public String generateToken(UserDetails userDetails) {
+    public String generateAccessToken(UserDetails userDetails) {
         int KEY_DURATION = 1000 * 60 * 60; // 1 час
 
         return Jwts.builder()
