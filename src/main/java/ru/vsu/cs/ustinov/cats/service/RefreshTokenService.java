@@ -2,7 +2,6 @@ package ru.vsu.cs.ustinov.cats.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.vsu.cs.ustinov.cats.jwt.JwtUtil;
 import ru.vsu.cs.ustinov.cats.model.RefreshToken;
 import ru.vsu.cs.ustinov.cats.model.User;
 import ru.vsu.cs.ustinov.cats.repository.RefreshTokenRepository;
@@ -16,7 +15,6 @@ import java.util.UUID;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtUtil jwtUtil;
 
     // Создание нового refresh токена
     public RefreshToken createRefreshToken(User user) {

@@ -11,7 +11,6 @@ import ru.vsu.cs.ustinov.cats.model.User;
 import ru.vsu.cs.ustinov.cats.repository.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -21,9 +20,10 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return loadUserByUsername(findByUsername(username));
+    }
 
+    public UserDetails loadUserByUsername(User user) throws UsernameNotFoundException {
         //TODO: разобраться с этим
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
@@ -32,8 +32,9 @@ public class UserService implements UserDetailsService {
         );
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     public void registerNewUser(String username, String password) {
