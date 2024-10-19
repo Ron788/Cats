@@ -111,7 +111,23 @@ public class AuthController {
         UserDetails userDetails = userService.loadUserByUsername(token.get().getUser().getUsername());
         String newAccessToken = jwtUtil.generateAccessToken(userDetails);
         return ResponseEntity.ok(new AuthResponse(newAccessToken));
+    }
 
+    /**
+     * Делаем refresh токен недействительным
+     * @param refreshToken токен
+     * @return ответ пользователю
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(@CookieValue("refreshToken") String refreshToken) {
+        Optional<RefreshToken> token = refreshTokenService.validateRefreshToken(refreshToken);
+
+        if (token.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired refresh token");
+        }
+
+        refreshTokenService.revokeToken(token.get());
+        return ResponseEntity.ok().body("Ok!");
     }
 }
 

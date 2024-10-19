@@ -25,7 +25,7 @@ public class SecurityConfig {
     private JwtRequestFilter jwtRequestFilter;
 
     @Getter
-    private static String[] openURIs = {"/api/auth/login", "/api/auth/register", "/api/auth/refresh-token"};
+    private static String[] openURIs = {"/api/auth/login", "/api/auth/register", "/api/auth/refresh-token", "/api/auth/logout"};
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
