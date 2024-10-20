@@ -22,7 +22,7 @@ public class PublicationController {
     public ResponseEntity<?> createPublication(@RequestBody PublicationCreateRequest publicationCreateRequest, Principal principal) {
         String username = principal.getName();
         Publication publication = publicationService.createPublication(publicationCreateRequest, username);
-        return ResponseEntity.ok(new PublicationCreateResponse(publication.getPost_id(), publication.getAuthor().getUsername(),
+        return ResponseEntity.ok(new PublicationCreateResponse(publication.getPostId(), publication.getAuthor().getUsername(),
                 publication.getUrl(), publication.getDescription()));
     }
 

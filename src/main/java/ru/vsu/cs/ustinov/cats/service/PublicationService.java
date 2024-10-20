@@ -40,7 +40,7 @@ public class PublicationService {
 
         User author = userService.findByUsername(username);
         return publicationRepository.findByAuthor(author, pageable).map(post ->
-            new GetByUserResponse(post.getPost_id(), post.getAuthor().getUsername(),
+            new GetByUserResponse(post.getPostId(), post.getAuthor().getUsername(),
                     post.getUrl(), post.getDescription(), likeService.countLikesByPublication(post))
         );
     }
