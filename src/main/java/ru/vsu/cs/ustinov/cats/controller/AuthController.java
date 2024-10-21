@@ -9,7 +9,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import ru.vsu.cs.ustinov.cats.dto.auth.AuthRequest;
-import ru.vsu.cs.ustinov.cats.dto.auth.AuthResponse;
 import ru.vsu.cs.ustinov.cats.dto.registration.RegistrationRequest;
 import ru.vsu.cs.ustinov.cats.model.RefreshToken;
 import ru.vsu.cs.ustinov.cats.model.User;
@@ -43,10 +42,10 @@ public class AuthController {
      * @return ответ пользователю
      */
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegistrationRequest registrationRequest) {
+    public ResponseEntity<String> registerUser(@RequestBody RegistrationRequest registrationRequest) {
         // Если пользователь с таким юзернеймом уже есть в БД
         if (userService.existsByUsername(registrationRequest.getUsername())) {
-            return ResponseEntity.badRequest().body("User with this username already exists.");
+            return ResponseEntity.ok("This username is already in use");
         }
         // Регистрируем
         userService.registerNewUser(registrationRequest.getUsername(), registrationRequest.getPassword());
@@ -54,14 +53,14 @@ public class AuthController {
     }
 
     /**
-     * Логиним пользователя. Возвращаем ему access токен,
-     * который надо будет держать в заголовке каждого запроса для идентификации.
-     * И refresh токен, по которому можно будет генерировать новые access токены
+     * Логиним пользователя. Записываем в куки access и refresh токены.
+     * Первый используется для авторизации, второй для генерации новых access токенов
+     * (срок жизни у них сильно различается)
      * @param authRequest данные для логина
      * @return ответ пользователю
      */
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<String> loginUser(@RequestBody AuthRequest authRequest) {
         // Непосредственно авторизация пользователя
         try {
             authenticationManager.authenticate(
@@ -77,19 +76,25 @@ public class AuthController {
         // Генерируем refresh токен
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         // В куках прописываем refresh токен
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
                 .httpOnly(true)
                 .path("/")
-                .maxAge(60 * 60 * 24 * 7)  // 7 дней
+                .maxAge(1000 * 60 * 60 * 24 * 7)  // 7 дней
                 .build();
 
 
         UserDetails userDetails = userService.loadUserByUsername(user);
         String accessToken = jwtUtil.generateAccessToken(userDetails);
 
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(1000 * 60 * 60)  // 1 час
+                .build();
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new AuthResponse(accessToken)); // Возвращаем access токен с куками
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString(), accessCookie.toString())
+                .body("Login completed successfully"); // Возвращаем access токен с куками
         // Возможно следует возвращать только refresh, а access получать следующим запросом, надо будет как-нибудь подумать над этим
     }
 
@@ -99,18 +104,27 @@ public class AuthController {
      * @return ответ пользователю
      */
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshAccessToken(@CookieValue("refreshToken") String refreshToken) {
+    public ResponseEntity<String> refreshAccessToken(@CookieValue("refreshToken") String refreshToken) {
         // Проверяем валидность refresh токена
         Optional<RefreshToken> token = refreshTokenService.validateRefreshToken(refreshToken);
 
         if (token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired refresh token");
+            return ResponseEntity.badRequest().body("Invalid or expired refresh token");
         }
 
         // Генерируем access и возвращаем
         UserDetails userDetails = userService.loadUserByUsername(token.get().getUser().getUsername());
         String newAccessToken = jwtUtil.generateAccessToken(userDetails);
-        return ResponseEntity.ok(new AuthResponse(newAccessToken));
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(1000 * 60 * 60)  // 1 час
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .body("New access token refreshed successfully");
     }
 
     /**
@@ -118,6 +132,7 @@ public class AuthController {
      * @param refreshToken токен
      * @return ответ пользователю
      */
+    @SuppressWarnings("DataFlowIssue") // for nulls
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(@CookieValue("refreshToken") String refreshToken) {
         Optional<RefreshToken> token = refreshTokenService.validateRefreshToken(refreshToken);
@@ -127,7 +142,22 @@ public class AuthController {
         }
 
         refreshTokenService.revokeToken(token.get());
-        return ResponseEntity.ok().body("Ok!");
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", null)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(0)  // 7 дней
+                .build();
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", null)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(0)  // 1 час
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString(), accessCookie.toString())
+                .body("Ok!");
     }
 }
 
