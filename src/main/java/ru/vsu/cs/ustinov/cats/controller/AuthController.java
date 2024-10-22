@@ -8,6 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import ru.vsu.cs.ustinov.cats.dto.DefaultResponse;
 import ru.vsu.cs.ustinov.cats.dto.auth.AuthRequest;
 import ru.vsu.cs.ustinov.cats.dto.registration.RegistrationRequest;
 import ru.vsu.cs.ustinov.cats.model.RefreshToken;
@@ -42,14 +43,14 @@ public class AuthController {
      * @return ответ пользователю
      */
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody RegistrationRequest registrationRequest) {
+    public ResponseEntity<DefaultResponse<String>> registerUser(@RequestBody RegistrationRequest registrationRequest) {
         // Если пользователь с таким юзернеймом уже есть в БД
         if (userService.existsByUsername(registrationRequest.getUsername())) {
-            return ResponseEntity.ok("This username is already in use");
+            return DefaultResponse.badRequest("This username is already in use");
         }
         // Регистрируем
         userService.registerNewUser(registrationRequest.getUsername(), registrationRequest.getPassword());
-        return ResponseEntity.ok("User registered successfully");
+        return DefaultResponse.ok("User registered successfully");
     }
 
     /**
@@ -60,15 +61,15 @@ public class AuthController {
      * @return ответ пользователю
      */
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<DefaultResponse<String>> loginUser(@RequestBody AuthRequest authRequest) {
         // Непосредственно авторизация пользователя
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
         } catch (BadCredentialsException e) {
-            return ResponseEntity.badRequest().body("Incorrect username or password.");
+            return DefaultResponse.badRequest("Incorrect username or password.");
         } catch (AuthenticationException e) {
-            return ResponseEntity.badRequest().body("Login failed.");
+            return DefaultResponse.badRequest("Login failed.");
         }
 
         // Получаем юзера по юзернейму
@@ -94,7 +95,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString(), accessCookie.toString())
-                .body("Login completed successfully"); // Возвращаем access токен с куками
+                .body(new DefaultResponse<>(HttpStatus.OK, "Login completed successfully")); // Возвращаем токены в куках
         // Возможно следует возвращать только refresh, а access получать следующим запросом, надо будет как-нибудь подумать над этим
     }
 
@@ -104,12 +105,12 @@ public class AuthController {
      * @return ответ пользователю
      */
     @PostMapping("/refresh-token")
-    public ResponseEntity<String> refreshAccessToken(@CookieValue("refreshToken") String refreshToken) {
+    public ResponseEntity<DefaultResponse<String>> refreshAccessToken(@CookieValue("refreshToken") String refreshToken) {
         // Проверяем валидность refresh токена
         Optional<RefreshToken> token = refreshTokenService.validateRefreshToken(refreshToken);
 
         if (token.isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid or expired refresh token");
+            return DefaultResponse.badRequest("Invalid or expired refresh token");
         }
 
         // Генерируем access и возвращаем
@@ -124,7 +125,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .body("New access token refreshed successfully");
+                .body(new DefaultResponse<>(HttpStatus.OK, "New access token refreshed successfully"));
     }
 
     /**
@@ -134,11 +135,11 @@ public class AuthController {
      */
     @SuppressWarnings("DataFlowIssue") // for nulls
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(@CookieValue("refreshToken") String refreshToken) {
+    public ResponseEntity<DefaultResponse<String>> logoutUser(@CookieValue("refreshToken") String refreshToken) {
         Optional<RefreshToken> token = refreshTokenService.validateRefreshToken(refreshToken);
 
         if (token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired refresh token");
+            return DefaultResponse.unauthorized("Invalid or expired refresh token");
         }
 
         refreshTokenService.revokeToken(token.get());
@@ -146,18 +147,18 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", null)
                 .httpOnly(true)
                 .path("/")
-                .maxAge(0)  // 7 дней
+                .maxAge(0) // Задаем время жизни = 0, чтобы удалить
                 .build();
 
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", null)
                 .httpOnly(true)
                 .path("/")
-                .maxAge(0)  // 1 час
+                .maxAge(0)
                 .build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString(), accessCookie.toString())
-                .body("Ok!");
+                .body(new DefaultResponse<>(HttpStatus.OK, "Ok!"));
     }
 }
 
