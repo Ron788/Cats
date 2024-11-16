@@ -29,8 +29,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private JwtUtil jwtUtil;
 
-
-    // TODO: разораться почему подчеркивает идея
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
@@ -47,19 +45,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         Cookie[] cookies = request.getCookies();
-
         if (cookies == null) {
             handleException(response, "Cookies are missing");
             return;
         }
-
         String jwt = null;
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals("accessToken")) {
                 jwt = cookie.getValue();
             }
         }
-
         if (jwt == null) {
             handleException(response, "Access token is missing");
             return;
@@ -73,8 +68,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-
-        // Получаем из БД информацию о пользователе
         UserDetails userDetails = userService.loadUserByUsername(username);
 
         if (!jwtUtil.validateToken(jwt, userDetails)){
@@ -82,7 +75,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Авторизуем
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

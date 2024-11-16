@@ -24,7 +24,6 @@ public class UserService implements UserDetailsService {
     }
 
     public UserDetails loadUserByUsername(User user) throws UsernameNotFoundException {
-        //TODO: разобраться с этим
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),

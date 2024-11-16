@@ -6,7 +6,7 @@ import ru.vsu.cs.ustinov.cats.model.User;
 import java.util.Optional;
 
 /**
- * Как по мне это магия, как-нибудь на досуге надо будет попытаться понять как это вообще работает, наверное.
+ * На самом деле чудо -_-
  */
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);

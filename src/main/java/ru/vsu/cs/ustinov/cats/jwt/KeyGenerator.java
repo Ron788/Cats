@@ -5,7 +5,7 @@ import java.util.Base64;
 
 
 /**
- * Класс, который я использовал для генерации ключа в {@link ru.vsu.cs.ustinov.cats.jwt.JwtUtil}.
+ * Класс, который я использовал для генерации ключа для {@link ru.vsu.cs.ustinov.cats.jwt.JwtUtil}.
  */
 public class KeyGenerator {
 

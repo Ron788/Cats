@@ -5,15 +5,16 @@ import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+/**
+ * Дабы уменьшить число дублируемого кода в контроллерах  и стандартизировать вид ответов
+ * написал эту обертку небольшую
+ * @param <T>
+ */
 @Data
 @AllArgsConstructor
 public class DefaultResponse<T> {
     HttpStatus status;
     T result;
-
-    public DefaultResponse<T> build(){
-        return this;
-    }
 
     public static <T> ResponseEntity<DefaultResponse<T>> ok(T result){
         return ResponseEntity.ok(new DefaultResponse<>(HttpStatus.OK, result));
