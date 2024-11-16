@@ -19,7 +19,7 @@ import java.io.IOException;
 
 /**
  * Непосредственно фильтр, который проверяет авторизацию
- * Для авторизации в заголовке запроса должно быть "Authorization: Bearer <token>"
+ * Для авторизации в куках должен лежать accessToken
  */
 @Component
 @AllArgsConstructor
