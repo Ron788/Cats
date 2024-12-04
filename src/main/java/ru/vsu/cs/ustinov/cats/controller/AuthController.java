@@ -54,8 +54,8 @@ public class AuthController {
     }
 
     /**
-     * Логиним пользователя. Записываем в куки access и refresh токены.
-     * Первый используется для авторизации, второй для генерации новых access токенов
+     * Логиним пользователя. Записываем в куки refresh токен, access возвращаем ответом.
+     * Второй используется для авторизации, первый для генерации новых access токенов
      * (срок жизни у них сильно различается)
      * @param authRequest данные для логина
      * @return ответ пользователю
@@ -87,15 +87,9 @@ public class AuthController {
         UserDetails userDetails = userService.loadUserByUsername(user);
         String accessToken = jwtUtil.generateAccessToken(userDetails);
 
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
-                .httpOnly(true)
-                .path("/")
-                .maxAge(1000 * 60 * 60)  // 1 час
-                .build();
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString(), accessCookie.toString())
-                .body(new DefaultResponse<>(HttpStatus.OK, "Login completed successfully")); // Возвращаем токены в куках
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(new DefaultResponse<>(HttpStatus.OK, "Login completed successfully").addData("accessToken", accessToken));
         // Возможно следует возвращать только refresh, а access получать следующим запросом, надо будет как-нибудь подумать над этим
     }
 

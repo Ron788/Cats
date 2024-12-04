@@ -2,7 +2,6 @@ package ru.vsu.cs.ustinov.cats.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -44,21 +43,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            handleException(response, "Cookies are missing");
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            handleException(response, "Auth token undefined");
             return;
         }
-        String jwt = null;
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("accessToken")) {
-                jwt = cookie.getValue();
-            }
-        }
-        if (jwt == null) {
-            handleException(response, "Access token is missing");
-            return;
-        }
+
+        String jwt = authHeader.substring(7);
 
         String username;
         try {

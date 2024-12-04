@@ -5,6 +5,9 @@ import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Дабы уменьшить число дублируемого кода в контроллерах  и стандартизировать вид ответов
  * написал эту обертку небольшую
@@ -15,6 +18,16 @@ import org.springframework.http.ResponseEntity;
 public class DefaultResponse<T> {
     HttpStatus status;
     T result;
+    Map<String, Object> additionalData;
+
+    public DefaultResponse(HttpStatus status, T result) {
+        this(status, result, new HashMap<>());
+    }
+
+    public DefaultResponse<T> addData(String key, Object value) {
+        additionalData.put(key, value);
+        return this;
+    }
 
     public static <T> ResponseEntity<DefaultResponse<T>> ok(T result){
         return ResponseEntity.ok(new DefaultResponse<>(HttpStatus.OK, result));
