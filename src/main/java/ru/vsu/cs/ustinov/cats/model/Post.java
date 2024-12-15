@@ -3,21 +3,21 @@ package ru.vsu.cs.ustinov.cats.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
-
 @Entity
-@Table(name = "users")
+@Table(name = "post")
 @Data
-public class User {
+public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long postId;
 
-    @Column(unique = true, nullable = false)
-    private String username;
-
-    @Column(nullable = false)
-    private String password;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId")
+    private User user;
 
     @Column(nullable = false)
-    private String role;
+    private String title;
+
+    @Column(nullable = false)
+    private String body;
 }

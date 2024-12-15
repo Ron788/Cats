@@ -144,14 +144,8 @@ public class AuthController {
                 .maxAge(0) // Задаем время жизни = 0, чтобы удалить
                 .build();
 
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", null)
-                .httpOnly(true)
-                .path("/")
-                .maxAge(0)
-                .build();
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString(), accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new DefaultResponse<>(HttpStatus.OK, "Ok!"));
     }
 }
