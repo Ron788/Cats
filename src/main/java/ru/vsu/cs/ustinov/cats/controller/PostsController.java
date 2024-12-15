@@ -51,6 +51,8 @@ public class PostsController {
             return ResponseEntity.badRequest().body(new DefaultResponse<>(HttpStatus.BAD_REQUEST, "Post not found"));
         }
 
-        return ResponseEntity.ok().body(new DefaultResponse<>(HttpStatus.OK, "Post found").addData("title", post.getTitle()).addData("body", post.getBody()).addData("creatorUsername", post.getUser().getUsername()));
+        return ResponseEntity.ok().body(new DefaultResponse<>(HttpStatus.OK, "Post found")
+                .addData("title", post.getTitle()).addData("body", post.getBody())
+                .addData("creatorUsername", post.getUser().getUsername()).addData("postId", post.getPostId()));
     }
 }
