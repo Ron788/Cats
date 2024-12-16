@@ -3,6 +3,7 @@ package ru.vsu.cs.ustinov.cats.controller;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,20 @@ public class UserController {
 
         return ResponseEntity.ok().body(new DefaultResponse<>(HttpStatus.OK, "User found")
                 .addData("userId", userId)
+                .addData("username", user.getUsername()));
+    }
+
+    @GetMapping("/find/{username}")
+    public ResponseEntity<DefaultResponse<String>> getUserByUsername(@PathVariable("username") String username) {
+        User user;
+        try {
+            user = userService.findByUsername(username);
+        }catch (UsernameNotFoundException e){
+            return ResponseEntity.badRequest().body(new DefaultResponse<>(HttpStatus.BAD_REQUEST, "User not found"));
+        }
+
+        return ResponseEntity.ok().body(new DefaultResponse<>(HttpStatus.OK, "User found")
+                .addData("userId", user.getUserId())
                 .addData("username", user.getUsername()));
     }
 }
