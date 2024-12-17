@@ -4,13 +4,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import ru.vsu.cs.ustinov.cats.dto.DefaultResponse;
 import ru.vsu.cs.ustinov.cats.dto.posts.CreatePostRequest;
 import ru.vsu.cs.ustinov.cats.dto.posts.DeletePostRequest;
 import ru.vsu.cs.ustinov.cats.jwt.JwtUtil;
 import ru.vsu.cs.ustinov.cats.model.Post;
+import ru.vsu.cs.ustinov.cats.model.User;
 import ru.vsu.cs.ustinov.cats.service.PostsService;
+import ru.vsu.cs.ustinov.cats.service.UserService;
+
+import java.util.Optional;
 
 @AllArgsConstructor
 @RestController
@@ -18,14 +24,18 @@ import ru.vsu.cs.ustinov.cats.service.PostsService;
 public class PostsController {
 
     PostsService postsService;
+    UserService userService;
 
     JwtUtil jwtUtil;
 
     @PostMapping("/new")
-    public ResponseEntity<DefaultResponse<String>> newPost(@RequestBody CreatePostRequest postRequest, HttpServletRequest request) {
-        String username = jwtUtil.extractUsername(request.getHeader("Authorization").substring(7));
-
-        if (!postsService.newPost(username, postRequest.getTitle(), postRequest.getBody())){
+    public ResponseEntity<DefaultResponse<String>> newPost(@RequestBody CreatePostRequest postRequest, @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        Optional<User> user = userService.findByUsername(username);
+        if (user.isEmpty()){
+            return DefaultResponse.badRequest("User not found");
+        }
+        if (!postsService.newPost(user.get(), postRequest.getTitle(), postRequest.getBody())){
             return ResponseEntity.badRequest().body(new DefaultResponse<>(HttpStatus.BAD_REQUEST, "User not found"));
         }
 

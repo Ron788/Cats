@@ -73,9 +73,12 @@ public class AuthController {
         }
 
         // Получаем юзера по юзернейму
-        User user = userService.findByUsername(authRequest.getUsername());
+        Optional<User> user = userService.findByUsername(authRequest.getUsername());
+        if (user.isEmpty()){
+            return DefaultResponse.badRequest("User not found");
+        }
         // Генерируем refresh токен
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.get());
         // В куках прописываем refresh токен
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
                 .httpOnly(true)
@@ -84,7 +87,7 @@ public class AuthController {
                 .build();
 
 
-        UserDetails userDetails = userService.loadUserByUsername(user);
+        UserDetails userDetails = userService.loadUserByUsername(user.get());
         String accessToken = jwtUtil.generateAccessToken(userDetails);
 
         return ResponseEntity.ok()

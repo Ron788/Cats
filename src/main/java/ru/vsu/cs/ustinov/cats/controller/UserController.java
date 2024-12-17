@@ -12,6 +12,8 @@ import ru.vsu.cs.ustinov.cats.dto.DefaultResponse;
 import ru.vsu.cs.ustinov.cats.model.User;
 import ru.vsu.cs.ustinov.cats.service.UserService;
 
+import java.util.Optional;
+
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/user")
@@ -33,15 +35,9 @@ public class UserController {
 
     @GetMapping("/find/{username}")
     public ResponseEntity<DefaultResponse<String>> getUserByUsername(@PathVariable("username") String username) {
-        User user;
-        try {
-            user = userService.findByUsername(username);
-        }catch (UsernameNotFoundException e){
-            return ResponseEntity.badRequest().body(new DefaultResponse<>(HttpStatus.BAD_REQUEST, "User not found"));
-        }
-
-        return ResponseEntity.ok().body(new DefaultResponse<>(HttpStatus.OK, "User found")
-                .addData("userId", user.getUserId())
-                .addData("username", user.getUsername()));
+        Optional<User> user = userService.findByUsername(username);
+        return user.map(value -> ResponseEntity.ok().body(new DefaultResponse<>(HttpStatus.OK, "User found")
+                .addData("userId", value.getUserId())
+                .addData("username", value.getUsername()))).orElseGet(() -> DefaultResponse.badRequest("User not found"));
     }
 }

@@ -11,6 +11,7 @@ import ru.vsu.cs.ustinov.cats.model.User;
 import ru.vsu.cs.ustinov.cats.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -20,7 +21,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return loadUserByUsername(findByUsername(username));
+        return loadUserByUsername(findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found")));
     }
 
     public UserDetails loadUserByUsername(User user) throws UsernameNotFoundException {
@@ -31,9 +32,8 @@ public class UserService implements UserDetailsService {
         );
     }
 
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     public void registerNewUser(String username, String password) {

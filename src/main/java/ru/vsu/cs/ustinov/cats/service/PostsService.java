@@ -15,15 +15,11 @@ public class PostsService {
     private final UserRepository userRepository;
     private final PostsRepository postsRepository;
 
-    public boolean newPost(String username, String title, String body) {
+    public boolean newPost(User user, String title, String body) {
         Post post = new Post();
         post.setTitle(title);
         post.setBody(body);
-        Optional<User> user = userRepository.findByUsername(username);
-        if (user.isEmpty()) {
-            return false;
-        }
-        post.setUser(user.get());
+        post.setUser(user);
         postsRepository.save(post);
 
         return true;
