@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: Cats
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cats
+    username: postgres
+    password: Qwerty123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  data:
+    jdbc:
+      dialect: postgresql
+
+logging:
+  level:
+    org.springframework.security:
+      DEBUG
+    org.springframework.web:
+      DEBUG
